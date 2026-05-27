@@ -1,0 +1,36 @@
+# Minimal TensorZero gateway config for the Vismaran demo.
+# A single chat function with two variants (anthropic + openai) so the demo can
+# generate ChatInference + ModelInference + (later) feedback rows that the
+# TensorZeroLogAdapter erases against.
+
+[gateway]
+bind_address = "0.0.0.0:3000"
+
+[functions.chat]
+type = "chat"
+
+[functions.chat.variants.claude-haiku]
+type = "chat_completion"
+model = "claude-haiku-4-5-20251001"
+weight = 1.0
+
+[functions.chat.variants.gpt-4o-mini]
+type = "chat_completion"
+model = "openai::gpt-4o-mini"
+weight = 0.0
+
+[models.claude-haiku-4-5-20251001]
+routing = ["anthropic"]
+
+[models.claude-haiku-4-5-20251001.providers.anthropic]
+type = "anthropic"
+model_name = "claude-haiku-4-5-20251001"
+
+[metrics.thumbs]
+type = "boolean"
+level = "inference"
+optimize = "max"
+
+[metrics.comment]
+type = "comment"
+level = "inference"

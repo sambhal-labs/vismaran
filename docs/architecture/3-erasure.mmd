@@ -1,0 +1,41 @@
+%%{init: {"sequence": {"actorMargin": 50, "messageAlign": "left"}, "themeVariables": {"fontFamily": "Inter, system-ui, sans-serif"}}}%%
+sequenceDiagram
+    autonumber
+    actor subject as Data subject
+    participant api as Your Agent / API
+    participant orch as Erasure<br/>Orchestrator
+    participant prov as Provenance<br/>Index
+    participant adp as Adapters<br/>(graph · vector · log)
+    participant sign as Receipt<br/>Signer
+    participant reg as Regulator<br/>(or auditor)
+
+    subject->>api: "Erase everything you know about me."
+    api->>orch: erase(subject, dry_run=True)
+    orch->>prov: lookup(subject)
+    prov-->>orch: list of (framework, record_id)
+    orch->>adp: preview(records) — parallel
+    adp-->>orch: counts (e.g. 14 nodes / 230 embs / 1247 rows)
+    orch-->>api: dry-run preview
+    api-->>subject: "Here's what will be erased. Confirm?"
+    subject->>api: Confirm
+    api->>orch: erase(subject, dry_run=False)
+
+    alt happy path
+        orch->>adp: erase(records) — parallel
+        adp-->>orch: ok per framework
+        orch->>prov: purge(subject)
+        prov-->>orch: ok
+        orch->>sign: sign(manifest)
+        sign-->>orch: receipt.json (Ed25519)
+        orch-->>api: receipt
+        api-->>subject: "Done. Here is your deletion receipt."
+        subject->>reg: present receipt.json (as proof)
+        reg->>reg: vismaran verify receipt.json<br/>signature ok · hashes ok → OK<br/>tampered any field → FAIL
+    else adapter failure (fail-loud, no partial commit)
+        orch->>adp: erase(records) — parallel
+        adp-->>orch: ok / FAILED<br/>(e.g. pgvector unreachable)
+        orch->>orch: detect partial failure
+        Note over orch: NO receipt signed.<br/>Operation marked in_progress in audit log.<br/>Idempotent retry resumes from provenance state.
+        orch-->>api: PartialErasureError(detail)
+        api-->>subject: "Erasure incomplete. Retried automatically. Operator notified."
+    end

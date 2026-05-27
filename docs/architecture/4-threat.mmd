@@ -1,0 +1,44 @@
+%%{init: {"flowchart": {"htmlLabels": true, "curve": "basis"}, "themeVariables": {"fontFamily": "Inter, system-ui, sans-serif"}}}%%
+flowchart TB
+
+    subgraph IN["Inside Vismaran's trust boundary (PROVABLE)"]
+        key[("Operator's Ed25519<br/>signing key")]
+        mem[("Live agent memory<br/>graph · vector · log")]
+        prov[("Provenance Index")]
+        orch["Erasure Orchestrator"]
+    end
+
+    receipt[["Signed Deletion Receipt<br/>(Ed25519 over canonical manifest)"]]
+
+    subgraph OUT["Outside Vismaran's trust boundary (NOT proven)"]
+        backups[("Database backups<br/>snapshots · WAL")]
+        offplatform[("Off-platform copies:<br/>exports · cached LLM outputs<br/>chat transcripts in 3rd-party tools")]
+        weights[("Model weights · fine-tunes<br/>trained on the subject's data")]
+        mirror[("Mirrored observability stacks<br/>3rd-party log shippers")]
+        adversary[("Malicious operator:<br/>could fake any receipt<br/>with their own key")]
+    end
+
+    yes["✓ At time T, the named adapters<br/>removed all rows with provenance<br/>tied to subject_id from LIVE + PROV"]
+    no["△ Anything in OUT requires<br/>separate controls:<br/>· retention + backup-<br/>  erasure SLAs<br/>· data-export tracking<br/>· DPIA / algorithmic-DD<br/>  process<br/>· key transparency log<br/>  (v0.3+)"]
+
+    IN --> |"signs"| receipt
+    receipt --> |"attests"| yes
+    receipt -.-> |"does NOT attest"| no
+
+    backups --- no
+    offplatform --- no
+    weights --- no
+    mirror --- no
+    adversary --- no
+
+    classDef inside fill:#e9ffe9,stroke:#2aa198,color:#073642
+    classDef outside fill:#ffe9e9,stroke:#dc322f,color:#073642
+    classDef receipt fill:#fff7d6,stroke:#b58900,color:#073642
+    classDef attest fill:#dff7d4,stroke:#859900,color:#073642
+    classDef notattest fill:#ffe5d4,stroke:#cb4b16,color:#073642
+
+    class key,mem,prov,orch inside
+    class backups,offplatform,weights,mirror,adversary outside
+    class receipt receipt
+    class yes attest
+    class no notattest

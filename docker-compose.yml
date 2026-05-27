@@ -1,0 +1,83 @@
+name: vismaran
+
+services:
+  neo4j:
+    image: neo4j:5.24-community
+    container_name: vismaran-neo4j
+    environment:
+      NEO4J_AUTH: neo4j/vismarandev
+      NEO4J_PLUGINS: '["apoc"]'
+      NEO4J_dbms_security_procedures_unrestricted: apoc.*
+    ports:
+      - "7474:7474"   # browser
+      - "7687:7687"   # bolt
+    volumes:
+      - neo4j-data:/data
+      - neo4j-logs:/logs
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:7474 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  postgres:
+    image: pgvector/pgvector:pg17
+    container_name: vismaran-postgres
+    environment:
+      POSTGRES_USER: vismaran
+      POSTGRES_PASSWORD: vismarandev
+      POSTGRES_DB: vismaran
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./docker/postgres-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vismaran -d vismaran"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:25.4
+    container_name: vismaran-clickhouse
+    environment:
+      CLICKHOUSE_DB: tensorzero
+      CLICKHOUSE_USER: tensorzero
+      CLICKHOUSE_PASSWORD: vismarandev
+    ports:
+      - "8123:8123"   # HTTP
+      - "9000:9000"   # native
+    volumes:
+      - clickhouse-data:/var/lib/clickhouse
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8123/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  tensorzero:
+    image: tensorzero/gateway:latest
+    container_name: vismaran-tensorzero
+    command: ["--config-file", "/app/tensorzero.toml"]
+    environment:
+      TENSORZERO_CLICKHOUSE_URL: "http://tensorzero:vismarandev@clickhouse:8123/tensorzero"
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-sk-not-set}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-sk-not-set}
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./docker/tensorzero.toml:/app/tensorzero.toml:ro
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+
+volumes:
+  neo4j-data:
+  neo4j-logs:
+  postgres-data:
+  clickhouse-data:

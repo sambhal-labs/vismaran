@@ -1,0 +1,16 @@
+%%{init: {"sequence": {"actorMargin": 60, "messageAlign": "left"}, "themeVariables": {"fontFamily": "Inter, system-ui, sans-serif"}}}%%
+sequenceDiagram
+    autonumber
+    actor agent as Your Agent
+    participant sdk as vismaran_sdk
+    participant mem as Memory layer<br/>(any adapter)
+    participant prov as Provenance Index
+
+    agent->>sdk: write(data, subject="alice@example.com")
+    sdk->>mem: store data (tagged with subject_id)
+    mem-->>sdk: record_id
+    sdk->>prov: append (subject_id, framework, record_id, write_ts)
+    prov-->>sdk: ok
+    sdk-->>agent: ok
+
+    Note over agent,prov: One agent write = one provenance row.<br/>This is THE prerequisite — without provenance,<br/>erasure across opaque embeddings is impossible.

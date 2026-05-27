@@ -1,0 +1,61 @@
+%%{init: {"flowchart": {"htmlLabels": true, "curve": "basis"}, "themeVariables": {"fontFamily": "Inter, system-ui, sans-serif"}}}%%
+flowchart LR
+
+    %% --- write path ---
+    subgraph APP["Application (write path) — agent-framework-agnostic"]
+        direction TB
+        agent["Your Agent<br/>(any framework)"]
+        sdk["vismaran_sdk<br/>generic tag + optional<br/>framework wrappers"]
+        prov[("Provenance Index<br/>(Postgres)<br/>subject_id → framework →<br/>record_id → write_ts")]
+    end
+
+    %% --- memory layers ---
+    subgraph MEM["Agent memory — three stores"]
+        direction TB
+        graph[("Graph store<br/>v0: Cognee + Neo4j")]
+        vector[("Vector store<br/>v0: pgvector")]
+        log[("Log store<br/>v0: TensorZero +<br/>ClickHouse")]
+    end
+
+    %% --- erase path ---
+    subgraph CORE["Vismaran core (erase path, framework-agnostic)"]
+        direction TB
+        orch["Erasure Orchestrator<br/>dry_run · idempotent · fail-loud"]
+        proto["Adapter Protocols<br/>GraphAdapter · VectorAdapter · LogAdapter"]
+        v0["v0 adapters<br/>CogneeGraphAdapter<br/>PgvectorVectorAdapter<br/>TensorZeroLogAdapter"]
+        roadmap["roadmap adapters<br/>Neo4j · Kuzu · FalkorDB<br/>Qdrant · Weaviate · Milvus<br/>Langfuse · OpenTelemetry<br/>Mem0 · Zep · Letta · Graphiti"]
+        receipt["Signed Receipt<br/>(Ed25519)"]
+    end
+
+    subject(["Data subject"]) -- "right to be forgotten" --> orch
+    receipt -- "verifiable proof" --> regulator((Regulator))
+
+    agent -- "tag + write" --> sdk
+    sdk -- "write" --> graph
+    sdk -- "write" --> vector
+    sdk -- "tag + log" --> log
+    sdk -- "record lineage" --> prov
+
+    orch --> proto
+    proto -. "v0 impls" .- v0
+    proto -. "roadmap" .- roadmap
+
+    orch -- "lookup" --> prov
+    v0 -- "delete (via adapter)" --> graph
+    v0 -- "delete (via adapter)" --> vector
+    v0 -- "delete (via adapter)" --> log
+    orch --> receipt
+
+    classDef store fill:#fff7d6,stroke:#b58900,color:#073642
+    classDef vismaran fill:#e9f5ff,stroke:#268bd2,color:#073642
+    classDef app fill:#f5f5e8,stroke:#859900,color:#073642
+    classDef subject fill:#fff,stroke:#dc322f,color:#073642
+    classDef regulator fill:#fff,stroke:#6c71c4,color:#073642
+    classDef roadmap fill:#fff,stroke:#aaa,color:#586e75,stroke-dasharray: 5 3
+
+    class graph,vector,log store
+    class orch,proto,v0,receipt,sdk,prov vismaran
+    class agent app
+    class subject subject
+    class regulator regulator
+    class roadmap roadmap

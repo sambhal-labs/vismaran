@@ -1,0 +1,63 @@
+%%{init: {"themeVariables": {"fontFamily": "Inter, system-ui, sans-serif"}}}%%
+classDiagram
+    direction LR
+
+    class GraphAdapter {
+        <<interface>>
+        +preview(scope, record_ids) PerStoreResult
+        +erase(scope, record_ids, mode) PerStoreResult
+        +health_check() bool
+    }
+
+    class CogneeGraphAdapter {
+    }
+    class Neo4jGraphAdapter {
+    }
+    class KuzuGraphAdapter {
+    }
+    class FalkorDBGraphAdapter {
+    }
+
+    GraphAdapter <|.. CogneeGraphAdapter : v0
+    GraphAdapter <|.. Neo4jGraphAdapter : roadmap
+    GraphAdapter <|.. KuzuGraphAdapter : roadmap
+    GraphAdapter <|.. FalkorDBGraphAdapter : roadmap
+
+    class VectorAdapter {
+        <<interface>>
+        +preview(scope, record_ids) PerStoreResult
+        +erase(scope, record_ids, mode) PerStoreResult
+        +health_check() bool
+    }
+
+    class PgvectorVectorAdapter {
+    }
+    class QdrantVectorAdapter {
+    }
+    class WeaviateVectorAdapter {
+    }
+    class MilvusVectorAdapter {
+    }
+
+    VectorAdapter <|.. PgvectorVectorAdapter : v0
+    VectorAdapter <|.. QdrantVectorAdapter : roadmap
+    VectorAdapter <|.. WeaviateVectorAdapter : roadmap
+    VectorAdapter <|.. MilvusVectorAdapter : roadmap
+
+    class LogAdapter {
+        <<interface>>
+        +preview(scope, record_ids) PerStoreResult
+        +erase(scope, record_ids, mode) PerStoreResult
+        +health_check() bool
+    }
+
+    class TensorZeroLogAdapter {
+    }
+    class LangfuseLogAdapter {
+    }
+    class OpenTelemetryLogAdapter {
+    }
+
+    LogAdapter <|.. TensorZeroLogAdapter : v0
+    LogAdapter <|.. LangfuseLogAdapter : roadmap
+    LogAdapter <|.. OpenTelemetryLogAdapter : roadmap

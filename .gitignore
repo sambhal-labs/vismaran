@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+.python-version
+
+# uv
+.uv/
+uv.lock-conflict
+
+# pytest / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Local Claude Code settings
+.claude/
+
+# Local secrets / receipts
+*.pem
+*.key
+keys/
+receipts/local-*.json
+.env
+.env.*
+!.env.example
+
+# Docker
+docker-compose.override.yml
+.docker-volumes/
+
+# Logs
+*.log
