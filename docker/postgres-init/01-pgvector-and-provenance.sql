@@ -20,7 +20,9 @@ CREATE TABLE IF NOT EXISTS vismaran.provenance (
     framework      TEXT        NOT NULL,  -- 'cognee' | 'pgvector' | 'tensorzero'
     record_id      TEXT        NOT NULL,  -- framework-native row identifier
     write_ts       TIMESTAMPTZ NOT NULL DEFAULT now(),
-    tags           JSONB       NOT NULL DEFAULT '{}'::jsonb
+    tags           JSONB       NOT NULL DEFAULT '{}'::jsonb,
+    -- Natural dedup key — re-recording is a no-op (ON CONFLICT DO NOTHING).
+    UNIQUE (subject_id, framework, record_id)
 );
 
 CREATE INDEX IF NOT EXISTS provenance_subject_idx

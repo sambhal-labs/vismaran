@@ -8,9 +8,10 @@ ingest. The cross-check is in ``tests/test_tag.py`` to catch drift.
 
 from __future__ import annotations
 
+import functools
+import inspect
 from contextlib import asynccontextmanager, contextmanager
 from contextvars import ContextVar, Token
-from functools import wraps
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
@@ -26,6 +27,8 @@ _subject_var: ContextVar[str | None] = ContextVar("vismaran_subject", default=No
 _tenant_var: ContextVar[str | None] = ContextVar("vismaran_tenant", default=None)
 _policy_var: ContextVar[str | None] = ContextVar("vismaran_policy", default=None)
 
+_BindTokens = tuple[Token[str | None], Token[str | None], Token[str | None]]
+
 
 def current_subject() -> str | None:
     """Return the subject_id active in this async context, if any.
@@ -33,6 +36,34 @@ def current_subject() -> str | None:
     Returns None outside any :func:`with_subject` block.
     """
     return _subject_var.get()
+
+
+def current_tenant() -> str | None:
+    """Return the tenant_id active in this async context, if any."""
+    return _tenant_var.get()
+
+
+def current_policy() -> str | None:
+    """Return the policy_id active in this async context, if any."""
+    return _policy_var.get()
+
+
+def current_tags() -> dict[str, str]:
+    """Return a fresh dict of the active vismaran::* tags.
+
+    Convenience for adapter / wrapper code that needs to merge subject context
+    into a request's tag map without three separate ``current_*()`` calls.
+    Empty keys are omitted, so the returned dict is safe to merge into
+    framework-native tag maps directly.
+    """
+    out: dict[str, str] = {}
+    if (sid := _subject_var.get()) is not None:
+        out[TAG_KEY_SUBJECT] = sid
+    if (tid := _tenant_var.get()) is not None:
+        out[TAG_KEY_TENANT] = tid
+    if (pid := _policy_var.get()) is not None:
+        out[TAG_KEY_POLICY] = pid
+    return out
 
 
 @asynccontextmanager
@@ -53,9 +84,16 @@ async def with_subject(
         async with with_subject("alice@example.com"):
             await cognee_add(text="...")
             await tz_inference(function_name="chat", input=...)
+
+    Nested ``with_subject`` blocks are supported; the inner subject shadows
+    the outer until the inner block exits. ``contextvars`` semantics — safe
+    across ``asyncio.gather`` because each task gets a copy of the context.
     """
-    raise NotImplementedError("Day 1 — straightforward contextvar bind + token reset")
-    yield  # pragma: no cover - for type checkers
+    tokens = _bind(subject_id, tenant_id, policy_id)
+    try:
+        yield
+    finally:
+        _unbind(tokens)
 
 
 @contextmanager
@@ -69,8 +107,11 @@ def sync_with_subject(
 
     Less common in agent code, but kept available for ingest scripts.
     """
-    raise NotImplementedError("Day 1")
-    yield  # pragma: no cover
+    tokens = _bind(subject_id, tenant_id, policy_id)
+    try:
+        yield
+    finally:
+        _unbind(tokens)
 
 
 def tag_subject(subject_arg: str = "subject") -> Callable[[Callable[..., Any]], Callable[..., Any]]:
@@ -83,24 +124,48 @@ def tag_subject(subject_arg: str = "subject") -> Callable[[Callable[..., Any]], 
         async def handle_user_turn(text: str, *, subject: str) -> str: ...
 
         # `with_subject("alice@...")` happens implicitly inside the call.
+
+    Args:
+        subject_arg: the kwarg name on the wrapped function that holds the
+            subject identifier. Defaults to ``"subject"``.
+
+    The decorator works on both sync and async callables.
     """
 
     def decorator(fn: Callable[..., Any]) -> Callable[..., Any]:
-        @wraps(fn)
-        async def wrapper(*args: Any, **kwargs: Any) -> Any:
-            raise NotImplementedError("Day 1")
+        if inspect.iscoroutinefunction(fn):
 
-        return wrapper
+            @functools.wraps(fn)
+            async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
+                subject = kwargs.get(subject_arg)
+                if subject is None:
+                    return await fn(*args, **kwargs)
+                async with with_subject(str(subject)):
+                    return await fn(*args, **kwargs)
+
+            return async_wrapper
+
+        @functools.wraps(fn)
+        def sync_wrapper(*args: Any, **kwargs: Any) -> Any:
+            subject = kwargs.get(subject_arg)
+            if subject is None:
+                return fn(*args, **kwargs)
+            with sync_with_subject(str(subject)):
+                return fn(*args, **kwargs)
+
+        return sync_wrapper
 
     return decorator
 
 
-# Internal helpers used by the contextmanager implementation when written.
+# --- internals -------------------------------------------------------------
+
+
 def _bind(
     subject_id: str,
     tenant_id: str | None,
     policy_id: str | None,
-) -> tuple[Token[str | None], Token[str | None], Token[str | None]]:
+) -> _BindTokens:
     return (
         _subject_var.set(subject_id),
         _tenant_var.set(tenant_id),
@@ -108,7 +173,7 @@ def _bind(
     )
 
 
-def _unbind(tokens: tuple[Token[str | None], Token[str | None], Token[str | None]]) -> None:
+def _unbind(tokens: _BindTokens) -> None:
     subject_token, tenant_token, policy_token = tokens
     _subject_var.reset(subject_token)
     _tenant_var.reset(tenant_token)

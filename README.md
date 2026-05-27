@@ -20,21 +20,23 @@ Honoring an Article 17 request means erasing across **all three**, and proving y
 
 ## Status
 
-**v0.1 alpha, Day 1 of a 7-day build sprint (started 2026-05-27).** Right now this repo is the scaffold and the spec. Adapter implementations land Days 2–5. End-to-end demo lands Day 6. Pinned launch happens Day 7.
+**v0.1 alpha, Day 2 of a 7-day build sprint (started 2026-05-27).** Cognee graph adapter (tier-3 NodeSet-scoped Cypher delete) and the ingest-side SDK ship today; 39 tests pass against live Postgres + Neo4j. Pgvector + TensorZero adapters land Days 3–4. End-to-end demo lands Day 6. Launch Day 7.
 
 | Capability | v0.1 (this week) | Roadmap |
 |---|:-:|:-:|
-| Cognee graph adapter (3-tier: user-scope, dataset-scope, Cypher fallback against `__Node__`) | ⏳ Day 2 | |
-| pgvector vector adapter (lineage-driven via provenance index) | ⏳ Day 3 | |
-| TensorZero log adapter (7 ClickHouse tables, ModelInference cascade by `inference_id`) | ⏳ Day 4 | |
-| Provenance SDK (`vismaran_sdk` — Cognee + TZ wrappers) | ⏳ Day 1–4 | |
-| Dry-run preview | ⏳ Day 4 | |
+| `vismaran_sdk.tag` — contextvar subject propagation across async tasks | ✅ Day 2 | |
+| `ProvenanceIndex` — Postgres-backed `(subject, framework, record_id, ts)` ledger | ✅ Day 2 | |
+| CogneeGraphAdapter — tier-3 Cypher delete via NodeSet `subject::<id>` (the wedge) | ✅ Day 2 | |
+| `vismaran_sdk.cognee_wrap.add` — subject tagging at ingest + provenance recording | ✅ Day 2 | |
+| Cognee tier-1 (user-scope `cognee.forget(user=)`) + tier-2 (dataset-scope) | | v0.2 |
+| PgvectorVectorAdapter — lineage-driven embedding deletion | ⏳ Day 3 | |
+| TensorZeroLogAdapter — 7 ClickHouse tables, ModelInference cascade by `inference_id` | ⏳ Day 4 | |
+| `vismaran_sdk.tensorzero_wrap` — `vismaran::subject_id` tag injection on inference + feedback | ⏳ Day 4 | |
+| Erasure Orchestrator — parallel fan-out, dry-run preview, fail-loud, idempotent | ⏳ Day 4 | |
 | Signed receipt (Ed25519, JSON, canonical manifest) + `vismaran verify` CLI | ⏳ Day 5 | |
-| Idempotent re-runs | ⏳ Day 4 | |
-| Fail-loud partial erasure | ⏳ Day 4 | |
 | FastAPI + HTMX demo (Cognee + pgvector + TensorZero) | ⏳ Day 6 | |
 | Crypto-shred mode | | v0.2 |
-| Anonymize-partial-subject (graph) — re-embed redacted chunks | ⚠️ stub | v0.2 |
+| Anonymize-partial-subject (graph) — re-embed redacted chunks | | v0.2 |
 | Kuzu / FalkorDB / Neptune graph backends | | v0.2 |
 | Mem0 / Zep / Graphiti / Letta adapters | | v0.3 |
 | Qdrant / Weaviate / Milvus vector | | v0.3 |
