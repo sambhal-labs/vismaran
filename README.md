@@ -47,15 +47,47 @@ Honest about scope: **both Cognee and TensorZero have zero open GDPR/RTBF issues
 
 ## Architecture
 
-Five diagrams (Mermaid source + PNG): see [`docs/architecture/`](docs/architecture/).
+Five diagrams. Mermaid sources live in [`docs/architecture/`](docs/architecture/); the PNGs below are checked-in renderings. Full design + DPDP / GDPR Article 17 clause mapping is in [`SPEC.md`](SPEC.md).
 
-- [Component overview](docs/architecture/1-component.mmd) — what plugs into what
-- [Ingest flow](docs/architecture/2-ingest.mmd) — the provenance contract
-- [Erasure flow](docs/architecture/3-erasure.mmd) — happy + failure branches + regulator verify
-- [Threat model](docs/architecture/4-threat.mmd) — what the receipt provably attests to (and what it doesn't)
-- [Adapter protocol](docs/architecture/5-adapter.mmd) — Graph / Vector / Log interfaces + v0 vs roadmap impls
+### 1. Component overview
 
-See [`SPEC.md`](SPEC.md) for the full design + DPDP / GDPR Article 17 clause mapping.
+What plugs into what: write path (your agent → `vismaran_sdk` → memory layers + provenance index) and erase path (data subject → Erasure Orchestrator → adapter fan-out → signed receipt → regulator). Framework-agnostic at the protocol level; v0 ships three concrete adapters.
+
+![Component overview](docs/architecture/img/v3-1-component.png)
+
+Source: [`1-component.mmd`](docs/architecture/1-component.mmd)
+
+### 2. Ingest flow
+
+The provenance contract in one sequence diagram. **One agent write = one provenance row.** Without this, erasure across opaque embeddings is impossible.
+
+![Ingest flow](docs/architecture/img/v3-2-ingest.png)
+
+Source: [`2-ingest.mmd`](docs/architecture/2-ingest.mmd)
+
+### 3. Erasure flow
+
+Happy path (dry-run → confirm → parallel adapter erase → signed receipt → regulator verifies offline) and the failure path (fail-loud, no partial-commit receipt, idempotent retry).
+
+![Erasure flow](docs/architecture/img/v3-3-erasure.png)
+
+Source: [`3-erasure.mmd`](docs/architecture/3-erasure.mmd)
+
+### 4. Threat model
+
+What the receipt provably attests (everything inside Vismaran's trust boundary) vs. what it doesn't (backups, off-platform copies, fine-tunes that already trained on the subject's data, mirrored observability, malicious operator). Anything outside the boundary needs separate controls.
+
+![Threat model](docs/architecture/img/v3-4-threat.png)
+
+Source: [`4-threat.mmd`](docs/architecture/4-threat.mmd)
+
+### 5. Adapter protocol
+
+The three interfaces (`GraphAdapter`, `VectorAdapter`, `LogAdapter`) and their v0 + roadmap implementations.
+
+![Adapter protocol](docs/architecture/img/v3-5-adapter.png)
+
+Source: [`5-adapter.mmd`](docs/architecture/5-adapter.mmd)
 
 ## Quickstart (will work end-of-Day-7)
 
@@ -97,12 +129,6 @@ async with with_subject("alice@example.com"):
 ```
 
 The tag prefix `vismaran::` is namespaced specifically because TensorZero reserves `tensorzero::` — see [`docs/architecture/`](docs/architecture/).
-
-## Project
-
-- **License:** Apache-2.0
-- **Built by:** [Manish Pande](https://manishpande.in) — AI Platform Leader, ex-DGM Jio, now independent. ([X: @daodevo8](https://x.com/daodevo8))
-- **Build-in-public on X.** Day 1 thesis tweet links here.
 
 ## Discussion welcome
 
