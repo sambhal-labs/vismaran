@@ -22,12 +22,12 @@ from contextlib import asynccontextmanager
 import neo4j
 import pytest
 
-from vismaran.adapters.cognee_graph import (
+from vismaran.domain import Mode, Scope, SubjectId
+from vismaran.infrastructure.adapters.cognee_graph import (
     COGNEE_UNIVERSAL_LABEL,
     CogneeGraphAdapter,
     _subject_node_set_tag,
 )
-from vismaran.types import Mode, Scope, SubjectId
 
 pytestmark = pytest.mark.integration
 

@@ -12,7 +12,7 @@ import asyncio
 
 import pytest
 
-from vismaran.adapters import tensorzero_log
+from vismaran.infrastructure.adapters import tensorzero_log
 from vismaran_sdk import tag, tensorzero_wrap
 
 # --- constant drift --------------------------------------------------------
@@ -32,7 +32,7 @@ def test_tag_key_uses_vismaran_prefix() -> None:
 
 def test_cognee_nodeset_prefix_matches_between_wrap_and_adapter() -> None:
     """SDK ingest tag prefix MUST equal the prefix the adapter scopes deletion to."""
-    from vismaran.adapters import cognee_graph
+    from vismaran.infrastructure.adapters import cognee_graph
     from vismaran_sdk import cognee_wrap
 
     assert cognee_wrap.NODE_SET_SUBJECT_PREFIX == cognee_graph.SUBJECT_NODE_SET_PREFIX

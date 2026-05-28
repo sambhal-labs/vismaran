@@ -35,33 +35,51 @@ the core depend on them.
   mock is `cognee.add` in unit tests (avoids needing an LLM for entity
   extraction); the full ingest path is covered by integration tests.
 
-## Architecture (current — flat; layered DDD refactor in progress)
+## Architecture — layered (DDD-influenced), hexagonal ports & adapters
+
+The dependency rule points inward: `domain` depends on nothing; `application`
+depends on `domain`; `infrastructure` and `interfaces` depend on `application`
++ `domain`. Nothing in `domain` imports a database/crypto library.
 
 ```
-src/vismaran/                 # the headless core (Python package: vismaran)
-  types.py                    # SubjectId, Scope, Mode, PerStoreResult, ProvenanceRow
-  exceptions.py               # VismaranError hierarchy
-  orchestrator.py             # Orchestrator — fans out to adapters, signs receipt
-  receipt.py                  # Receipt value object + Ed25519 sign/verify (Day 5)
-  provenance.py               # ProvenanceIndex — asyncpg ledger
-  cli.py                      # `vismaran` CLI (erase / verify / keygen)
-  adapters/
-    base.py                   # GraphAdapter / VectorAdapter / LogAdapter Protocols (the ports)
-    cognee_graph.py           # CogneeGraphAdapter
-    pgvector_vector.py        # PgvectorVectorAdapter (Day 3)
-    tensorzero_log.py         # TensorZeroLogAdapter (Day 4)
-src/vismaran_sdk/             # ingest-side bounded context (the provenance contract)
-  tag.py                      # with_subject contextvar, tag_subject decorator
-  cognee_wrap.py              # cognee.add wrapper: tag + record provenance
-  tensorzero_wrap.py          # TZ inference/feedback wrapper (Day 4)
-tests/                        # pytest; integration tests marked @pytest.mark.integration
-docker/                       # docker-compose service config + Postgres init SQL
-docs/architecture/            # 5 Mermaid sources + rendered PNGs
-examples/fastapi_demo/        # illustrative demo (Day 6) — NOT a core dependency
+src/vismaran/                       # the headless core (Python package: vismaran)
+  __init__.py                       # stable public API — import names from here
+  domain/                           # pure models, zero I/O
+    identifiers.py                  #   SubjectId, RecordId
+    errors.py                       #   VismaranError hierarchy
+    erasure/                        #   Scope, Mode, AdapterKind, PerStoreResult
+    provenance/                     #   ProvenanceRecord
+    receipt/                        #   Receipt value object + canonical_manifest()
+  application/                      # use cases + the ports they depend on
+    ports.py                        #   StoreAdapter / Graph/Vector/LogAdapter, ProvenanceStore
+    orchestrator.py                 #   Orchestrator — fans out to adapters, signs receipt
+  infrastructure/                   # everything that touches the outside world
+    adapters/                       #   CogneeGraphAdapter, PgvectorVectorAdapter, TensorZeroLogAdapter
+    persistence/                    #   ProvenanceIndex (asyncpg; implements ProvenanceStore)
+    crypto/                         #   Ed25519ReceiptSigner
+  interfaces/                       # entry points
+    cli.py                          #   `vismaran` CLI (erase / verify / keygen)
+src/vismaran_sdk/                   # ingest-side bounded context (the provenance contract)
+  tag.py                            #   with_subject contextvar, tag_subject decorator
+  cognee_wrap.py                    #   cognee.add wrapper: tag + record provenance
+  tensorzero_wrap.py                #   TZ inference/feedback wrapper
+tests/                             # pytest; integration tests marked @pytest.mark.integration
+docker/                            # docker-compose service config + Postgres init SQL
+docs/architecture/                 # 5 Mermaid sources + rendered PNGs
+examples/fastapi_demo/             # illustrative demo — NOT a core dependency
 ```
 
-The adapter Protocols in `adapters/base.py` are hexagonal **ports**; concrete
-adapters are the driven side. The orchestrator depends only on the Protocols.
+**Ports & adapters:** `application/ports.py` defines Protocols (the ports);
+`infrastructure/` provides the driven adapters. The orchestrator and the ingest
+SDK depend only on the ports (e.g. `ProvenanceStore`), never a concrete class.
+The domain `Receipt` is a pure value object; the Ed25519 signing lives in
+`infrastructure/crypto` and operates *on* a Receipt — keeping crypto out of the
+domain.
+
+**Import discipline:** prefer the public re-exports — `from vismaran import
+Scope, Receipt, Orchestrator` or `from vismaran.domain import ...`. Reach into a
+specific infrastructure module only when you need a concrete adapter (e.g.
+`from vismaran.infrastructure.adapters import CogneeGraphAdapter`).
 
 ## The provenance contract
 

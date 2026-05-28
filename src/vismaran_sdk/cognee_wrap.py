@@ -7,11 +7,12 @@ around the calls that mutate state. Read paths pass through unmodified.
 The wrapper attaches the subject as a Cognee NodeSet tag (``belongs_to_set``
 on every node materialized from this ingest) using the prefix
 ``subject::<subject_id>``. The matching delete path lives in
-:mod:`vismaran.adapters.cognee_graph` (tier-3 Cypher scoped to that tag).
+:mod:`vismaran.infrastructure.adapters.cognee_graph` (tier-3 Cypher scoped to
+that tag).
 
 The NodeSet prefix here MUST match
-:const:`vismaran.adapters.cognee_graph.SUBJECT_NODE_SET_PREFIX`. The
-:func:`tests/test_cognee_wrap` integration test cross-checks this at runtime.
+:const:`vismaran.infrastructure.adapters.cognee_graph.SUBJECT_NODE_SET_PREFIX`.
+The ``tests/test_tag`` cross-check asserts this at import time.
 """
 
 from __future__ import annotations
@@ -20,19 +21,19 @@ from typing import TYPE_CHECKING, Any
 
 import cognee
 
-from vismaran.exceptions import UntracedSubjectError
+from vismaran.domain import UntracedSubjectError
 from vismaran_sdk.tag import current_subject
 
 if TYPE_CHECKING:
-    from vismaran.provenance import ProvenanceIndex
+    from vismaran.application.ports import ProvenanceStore
 
 NODE_SET_SUBJECT_PREFIX = "subject::"
 """Prefix used to encode the subject_id as a Cognee NodeSet tag.
 
 A Cognee NodeSet is a label that groups nodes for cross-dataset queries
 (stored as the ``belongs_to_set`` array property on every materialized node).
-The tier-3 Cypher in :mod:`vismaran.adapters.cognee_graph` matches on
-``WHERE $tag IN n.belongs_to_set``.
+The tier-3 Cypher in :mod:`vismaran.infrastructure.adapters.cognee_graph`
+matches on ``WHERE $tag IN n.belongs_to_set``.
 """
 
 DEFAULT_DATASET = "main_dataset"  # matches cognee.add's default in v1.1.0
@@ -47,7 +48,7 @@ async def add(
     *,
     dataset_name: str = DEFAULT_DATASET,
     node_set: list[str] | None = None,
-    provenance: ProvenanceIndex | None = None,
+    provenance: ProvenanceStore | None = None,
     fail_loud: bool = True,
     **cognee_kwargs: Any,
 ) -> Any:
@@ -60,7 +61,7 @@ async def add(
        subjects become un-erasable later.
     2. Append ``subject::<subject_id>`` to the ``node_set`` list and forward
        to ``cognee.add(text, dataset_name=..., node_set=...)``.
-    3. If a ``ProvenanceIndex`` was passed, record one provenance row per
+    3. If a ``ProvenanceStore`` was passed, record one provenance row per
        dataset-id Cognee returns (Cognee may chunk a single add into multiple
        data items).
 
@@ -70,7 +71,7 @@ async def add(
             own default).
         node_set: additional NodeSet tags to apply. The subject tag is always
             appended.
-        provenance: optional :class:`ProvenanceIndex`. If supplied, the
+        provenance: optional :class:`ProvenanceStore`. If supplied, the
             wrapper records a row per Cognee data-id; if None, the caller is
             responsible for recording provenance later.
         fail_loud: when True (default), raise if no subject is in scope.
@@ -122,7 +123,7 @@ async def cognify(**cognee_kwargs: Any) -> Any:
 
 
 async def _record_cognee_provenance(
-    provenance: ProvenanceIndex,
+    provenance: ProvenanceStore,
     subject_id: str,
     dataset_name: str,
     cognee_add_result: Any,

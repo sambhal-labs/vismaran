@@ -5,7 +5,7 @@ Three subcommands in v0.1:
 - ``vismaran verify <receipt.json> [--pubkey <pubkey.pem>]``
 - ``vismaran keygen [--out keys/operator.key]``
 
-Implementation lands Day 5 alongside the receipt + verify primitives.
+Wired to the orchestrator + receipt signer once those land (see SPEC.md).
 """
 
 from __future__ import annotations

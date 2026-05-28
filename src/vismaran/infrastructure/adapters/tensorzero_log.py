@@ -1,6 +1,6 @@
 """TensorZeroLogAdapter — tag-scoped deletion against TensorZero's ClickHouse schema.
 
-Day-1 spike (2026-05-27) findings encoded as module-level constants below.
+Schema-spike (2026-05-27) findings encoded as module-level constants below.
 Full notes in ``project_adapter_spec.md`` in project memory.
 
 Subject scoping. TensorZero exposes ``tags: Map(String, String)`` on both
@@ -30,17 +30,19 @@ Mixed-subject episodes delete cleanly. Edge case: episode-level
 ``CommentFeedback`` (``target_type='episode'``) — operator must tag those at
 ingest time too; document it in SPEC.
 
-Implementation lands Day 4.
+Implementation lands with the log-adapter milestone.
 """
 
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from vismaran.types import AdapterKind, Mode, Scope
+from vismaran.domain.erasure import AdapterKind, Mode, Scope
 
 if TYPE_CHECKING:
-    from vismaran.types import PerStoreResult, ProvenanceRow, SubjectId
+    from vismaran.domain.erasure import PerStoreResult
+    from vismaran.domain.identifiers import SubjectId
+    from vismaran.domain.provenance import ProvenanceRecord
 
 # Tag convention — MUST match ``vismaran_sdk.tag.TAG_KEY_SUBJECT``.
 # TensorZero reserves ``tensorzero::`` so we cannot use that prefix.
@@ -105,7 +107,7 @@ class TensorZeroLogAdapter:
         subject: SubjectId,
         *,
         scope: Scope,
-        provenance: list[ProvenanceRow],
+        provenance: list[ProvenanceRecord],
     ) -> PerStoreResult:
         """Pre-query ``SELECT count()`` per table for receipt-grade counts.
 
@@ -113,7 +115,7 @@ class TensorZeroLogAdapter:
         subject's volume is below the heuristic threshold; falls back to a
         direct ``WHERE tags['vismaran::subject_id'] = ...`` scan otherwise.
         """
-        raise NotImplementedError("Day 4 — see SPEC.md § Adapters § TensorZero")
+        raise NotImplementedError("Not implemented yet; see SPEC.md (Adapters / TensorZero).")
 
     async def erase(
         self,
@@ -121,7 +123,7 @@ class TensorZeroLogAdapter:
         *,
         scope: Scope,
         mode: Mode,
-        provenance: list[ProvenanceRow],
+        provenance: list[ProvenanceRecord],
     ) -> PerStoreResult:
         """Issue ``ALTER TABLE ... DELETE WHERE ...`` per table.
 
@@ -130,7 +132,7 @@ class TensorZeroLogAdapter:
         tag-scoped tables. Otherwise the inference_id list is empty by the time
         we get to ModelInference.
         """
-        raise NotImplementedError("Day 4 — see SPEC.md § Adapters § TensorZero")
+        raise NotImplementedError("Not implemented yet; see SPEC.md (Adapters / TensorZero).")
 
     async def health_check(self) -> bool:
-        raise NotImplementedError("Day 4")
+        raise NotImplementedError("Not implemented yet; see SPEC.md (Adapters / TensorZero).")

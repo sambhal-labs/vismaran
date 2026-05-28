@@ -20,21 +20,21 @@ Honoring an Article 17 request means erasing across **all three**, and proving y
 
 ## Status
 
-**v0.1 alpha, Day 2 of a 7-day build sprint (started 2026-05-27).** Cognee graph adapter (tier-3 NodeSet-scoped Cypher delete) and the ingest-side SDK ship today; 39 tests pass against live Postgres + Neo4j. Pgvector + TensorZero adapters land Days 3–4. End-to-end demo lands Day 6. Launch Day 7.
+**v0.1 alpha — active development.** The Cognee graph adapter (tier-3 NodeSet-scoped Cypher delete) and the ingest-side SDK are in, with 39 tests passing against live Postgres + Neo4j on every PR. Pgvector and TensorZero adapters, the orchestrator, and signed receipts are next. Legend: ✅ shipped · 🚧 next · 📋 planned.
 
-| Capability | v0.1 (this week) | Roadmap |
+| Capability | v0.1 | Roadmap |
 |---|:-:|:-:|
-| `vismaran_sdk.tag` — contextvar subject propagation across async tasks | ✅ Day 2 | |
-| `ProvenanceIndex` — Postgres-backed `(subject, framework, record_id, ts)` ledger | ✅ Day 2 | |
-| CogneeGraphAdapter — tier-3 Cypher delete via NodeSet `subject::<id>` (the wedge) | ✅ Day 2 | |
-| `vismaran_sdk.cognee_wrap.add` — subject tagging at ingest + provenance recording | ✅ Day 2 | |
+| `vismaran_sdk.tag` — contextvar subject propagation across async tasks | ✅ | |
+| `ProvenanceIndex` — Postgres-backed `(subject, framework, record_id, ts)` ledger | ✅ | |
+| CogneeGraphAdapter — tier-3 Cypher delete via NodeSet `subject::<id>` (the wedge) | ✅ | |
+| `vismaran_sdk.cognee_wrap.add` — subject tagging at ingest + provenance recording | ✅ | |
 | Cognee tier-1 (user-scope `cognee.forget(user=)`) + tier-2 (dataset-scope) | | v0.2 |
-| PgvectorVectorAdapter — lineage-driven embedding deletion | ⏳ Day 3 | |
-| TensorZeroLogAdapter — 7 ClickHouse tables, ModelInference cascade by `inference_id` | ⏳ Day 4 | |
-| `vismaran_sdk.tensorzero_wrap` — `vismaran::subject_id` tag injection on inference + feedback | ⏳ Day 4 | |
-| Erasure Orchestrator — parallel fan-out, dry-run preview, fail-loud, idempotent | ⏳ Day 4 | |
-| Signed receipt (Ed25519, JSON, canonical manifest) + `vismaran verify` CLI | ⏳ Day 5 | |
-| FastAPI + HTMX demo (Cognee + pgvector + TensorZero) | ⏳ Day 6 | |
+| PgvectorVectorAdapter — lineage-driven embedding deletion | 🚧 | |
+| TensorZeroLogAdapter — 7 ClickHouse tables, ModelInference cascade by `inference_id` | 📋 | |
+| `vismaran_sdk.tensorzero_wrap` — `vismaran::subject_id` tag injection on inference + feedback | 📋 | |
+| Erasure Orchestrator — parallel fan-out, dry-run preview, fail-loud, idempotent | 📋 | |
+| Signed receipt (Ed25519, JSON, canonical manifest) + `vismaran verify` CLI | 📋 | |
+| FastAPI + HTMX demo (Cognee + pgvector + TensorZero) | 📋 | |
 | Crypto-shred mode | | v0.2 |
 | Anonymize-partial-subject (graph) — re-embed redacted chunks | | v0.2 |
 | Kuzu / FalkorDB / Neptune graph backends | | v0.2 |
@@ -91,7 +91,7 @@ The three interfaces (`GraphAdapter`, `VectorAdapter`, `LogAdapter`) and their v
 
 Source: [`5-adapter.mmd`](docs/architecture/5-adapter.mmd)
 
-## Quickstart (will work end-of-Day-7)
+## Quickstart (target — end-to-end flow lands with the demo milestone)
 
 ```bash
 # clone
@@ -114,7 +114,7 @@ uv run vismaran erase --subject alice@example.com
 uv run vismaran verify receipt.json
 ```
 
-Today (Day 1) only the scaffold + spec exists; `uv run vismaran` will print "not implemented yet" until Day 5.
+Until the orchestrator and receipt signer land, `uv run vismaran` prints "not implemented yet" for the erase/verify subcommands.
 
 ## Provenance contract (the only thing your agent has to do)
 

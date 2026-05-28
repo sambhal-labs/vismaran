@@ -14,8 +14,8 @@ from unittest.mock import AsyncMock
 import pytest
 
 import vismaran_sdk.cognee_wrap as cw
-from vismaran.exceptions import UntracedSubjectError
-from vismaran.provenance import ProvenanceIndex
+from vismaran.domain import UntracedSubjectError
+from vismaran.infrastructure.persistence import ProvenanceIndex
 from vismaran_sdk.tag import with_subject
 
 DEFAULT_DSN = "postgres://vismaran:vismarandev@localhost:5432/vismaran"

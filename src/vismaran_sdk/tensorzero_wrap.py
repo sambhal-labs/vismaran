@@ -10,7 +10,7 @@ independently — that's why this module wraps both ``inference()`` and
 ``feedback()`` and the wrappers' contract is identical: subject_id MUST be in
 scope (via ``with_subject``) at every call.
 
-Day-1 spike confirmed this on TensorZero latest (2026-05) — see
+A schema spike (2026-05-27) confirmed this on the current TensorZero gateway; see
 ``project_adapter_spec.md`` in project memory.
 
 Implementation lands with the TensorZero log adapter.
@@ -44,7 +44,7 @@ async def inference(
     3. On success, record a provenance row ``(subject, "tensorzero", inference_id, now)``
        with framework_metadata=``{episode_id, function_name}``.
     """
-    raise NotImplementedError("Day 1, then revisited Day 4 for end-to-end test")
+    raise NotImplementedError("Implemented with the TensorZero adapter milestone (SPEC.md).")
 
 
 async def feedback(
@@ -61,4 +61,4 @@ async def feedback(
     Tag injection is identical to :func:`inference` — TZ does NOT propagate
     tags from inference to feedback, so the wrapper enforces it here.
     """
-    raise NotImplementedError("Day 1, revisited Day 4")
+    raise NotImplementedError("Implemented with the TensorZero adapter milestone (SPEC.md).")

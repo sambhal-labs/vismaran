@@ -88,7 +88,7 @@ Canonical JSON, signed with Ed25519. The signed payload includes a SHA-256 hash 
 
 ## DPDP / GDPR clause mapping
 
-⏳ Day 5. Concise table of which clause(s) each capability satisfies.
+Concise table of which clause(s) each capability satisfies (expanded as the receipt milestone lands).
 
 | Clause | What it requires | Vismaran capability |
 |---|---|---|

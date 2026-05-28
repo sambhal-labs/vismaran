@@ -1,31 +1,33 @@
-"""Erasure orchestrator — the public entry point for a right-to-be-forgotten request.
+"""Erasure orchestrator — the application service for a right-to-be-forgotten request.
 
 Responsibilities:
 
-1. Resolve the subject through the provenance index.
+1. Resolve the subject through the provenance store.
 2. Fan out to every registered adapter in parallel — dry-run first, then commit.
 3. Collect per-adapter results. On any failure, fail loud (``PartialErasureError``).
 4. On full success, sign a receipt and return it.
 5. Maintain a local audit log so retries are idempotent.
 
-The orchestrator is the ONLY part of Vismaran that knows about all three
-memory layers; adapters know only their own.
+The orchestrator is the only component that knows about all three memory
+layers; adapters know only their own. It depends on ports
+(``vismaran.application.ports``), never on concrete infrastructure.
 
-Implementation lands Day 4 once all three adapters exist.
+Implementation lands with the orchestrator milestone (SPEC.md).
 """
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import TYPE_CHECKING
 
-from vismaran.types import Mode, Scope
+from vismaran.domain.erasure import Mode, Scope
 
 if TYPE_CHECKING:
-    from vismaran.adapters.base import Adapter
-    from vismaran.provenance import ProvenanceIndex
-    from vismaran.receipt import Receipt
-    from vismaran.types import PerStoreResult, SubjectId
+    from pathlib import Path
+
+    from vismaran.application.ports import ProvenanceStore, StoreAdapter
+    from vismaran.domain.erasure import PerStoreResult
+    from vismaran.domain.identifiers import SubjectId
+    from vismaran.domain.receipt import Receipt
 
 
 class Orchestrator:
@@ -34,8 +36,8 @@ class Orchestrator:
     def __init__(
         self,
         *,
-        provenance: ProvenanceIndex,
-        adapters: list[Adapter],
+        provenance: ProvenanceStore,
+        adapters: list[StoreAdapter],
         signing_key_path: Path,
         subject_salt: bytes,
         operator_id: str,
@@ -52,7 +54,7 @@ class Orchestrator:
         self, subject: SubjectId, *, scope: Scope = Scope.SUBJECT
     ) -> list[PerStoreResult]:
         """Dry-run — return projected counts per adapter without mutating anything."""
-        raise NotImplementedError("Day 4")
+        raise NotImplementedError("Orchestrator lands after the three adapters (SPEC.md).")
 
     async def erase(
         self,
@@ -67,4 +69,4 @@ class Orchestrator:
             PartialErasureError: any adapter failed. No receipt is signed.
             ConfigurationError: signing key or salt is missing/invalid.
         """
-        raise NotImplementedError("Day 4")
+        raise NotImplementedError("Orchestrator lands after the three adapters (SPEC.md).")

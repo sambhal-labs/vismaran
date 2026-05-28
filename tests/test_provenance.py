@@ -13,8 +13,8 @@ from datetime import UTC, datetime
 
 import pytest
 
-from vismaran.provenance import ProvenanceIndex
-from vismaran.types import ProvenanceRow, RecordId, SubjectId
+from vismaran.domain import ProvenanceRecord, RecordId, SubjectId
+from vismaran.infrastructure.persistence import ProvenanceIndex
 
 pytestmark = pytest.mark.integration
 
@@ -60,7 +60,7 @@ async def test_record_is_idempotent(provenance: ProvenanceIndex) -> None:
 
 async def test_record_many_bulk_insert(provenance: ProvenanceIndex) -> None:
     rows = [
-        ProvenanceRow(
+        ProvenanceRecord(
             subject_id=SubjectId("alice@example.com"),
             framework="pgvector",
             record_id=RecordId(f"emb-{i}"),

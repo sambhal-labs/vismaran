@@ -1,6 +1,6 @@
 """CogneeGraphAdapter — three-tier deletion against Cognee + Neo4j (et al.).
 
-Day-1 spike (2026-05-27, see ``project_adapter_spec.md`` in project memory)
+A schema spike (2026-05-27, notes in project memory)
 established that Cognee v1.1.0 ships ``cognee.forget(user=, dataset=, data_id=,
 everything=)`` covering tenant/dataset/data-item deletion, but has **no** API
 for "subject-mentioned-inside-someone-else's-content" — the actual GDPR case.
@@ -33,10 +33,11 @@ from typing import TYPE_CHECKING
 
 import neo4j
 
-from vismaran.types import AdapterKind, Mode, PerStoreResult, Scope
+from vismaran.domain.erasure import AdapterKind, Mode, PerStoreResult, Scope
 
 if TYPE_CHECKING:
-    from vismaran.types import ProvenanceRow, SubjectId
+    from vismaran.domain.identifiers import SubjectId
+    from vismaran.domain.provenance import ProvenanceRecord
 
 # Cognee universal node label — every node in the graph carries this PLUS its
 # dynamic class label (Entity, DocumentChunk, Triplet, TextSummary, ...).
@@ -112,7 +113,7 @@ class CogneeGraphAdapter:
         subject: SubjectId,
         *,
         scope: Scope,
-        provenance: list[ProvenanceRow],
+        provenance: list[ProvenanceRecord],
     ) -> PerStoreResult:
         """Pre-query counts by node class without mutating anything.
 
@@ -135,7 +136,7 @@ class CogneeGraphAdapter:
         *,
         scope: Scope,
         mode: Mode,
-        provenance: list[ProvenanceRow],
+        provenance: list[ProvenanceRecord],
     ) -> PerStoreResult:
         """Tier-3 only in v0.1: Cypher delete of subject-scoped NodeSet members."""
         if mode == Mode.DRY_RUN:
