@@ -37,7 +37,9 @@ class Receipt:
 
     version: str
     subject_id_hash: str  # "sha256:<hex>"
-    salt_hash: str  # "sha256:<hex>" — hash of the salt itself (lets verify code detect salt rotation)
+    salt_hash: (
+        str  # "sha256:<hex>" — hash of the salt itself (lets verify code detect salt rotation)
+    )
     issued_at: datetime
     operator_id: str
     clauses: tuple[str, ...]

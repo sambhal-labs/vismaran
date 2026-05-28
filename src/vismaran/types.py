@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any, NewType
 
 SubjectId = NewType("SubjectId", str)
@@ -23,21 +23,21 @@ RecordId = NewType("RecordId", str)
 UUID, a TensorZero inference UUIDv7)."""
 
 
-class Scope(str, Enum):
+class Scope(StrEnum):
     """Which axis of the data we're erasing along."""
 
     SUBJECT = "subject"
     DATASET = "dataset"
 
 
-class Mode(str, Enum):
+class Mode(StrEnum):
     """Erasure mode."""
 
     DRY_RUN = "dry_run"
     COMMIT = "commit"
 
 
-class AdapterKind(str, Enum):
+class AdapterKind(StrEnum):
     """One of the three memory layers."""
 
     GRAPH = "graph"

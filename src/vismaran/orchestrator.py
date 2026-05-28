@@ -48,7 +48,9 @@ class Orchestrator:
         self._operator_id = operator_id
         self._clauses = clauses
 
-    async def preview(self, subject: SubjectId, *, scope: Scope = Scope.SUBJECT) -> list[PerStoreResult]:
+    async def preview(
+        self, subject: SubjectId, *, scope: Scope = Scope.SUBJECT
+    ) -> list[PerStoreResult]:
         """Dry-run — return projected counts per adapter without mutating anything."""
         raise NotImplementedError("Day 4")
 

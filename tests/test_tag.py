@@ -15,7 +15,6 @@ import pytest
 from vismaran.adapters import tensorzero_log
 from vismaran_sdk import tag, tensorzero_wrap
 
-
 # --- constant drift --------------------------------------------------------
 
 
@@ -32,7 +31,7 @@ def test_tag_key_uses_vismaran_prefix() -> None:
 
 
 def test_cognee_nodeset_prefix_matches_between_wrap_and_adapter() -> None:
-    """The NodeSet tag the SDK writes at ingest MUST match the prefix the adapter scopes deletion to."""
+    """SDK ingest tag prefix MUST equal the prefix the adapter scopes deletion to."""
     from vismaran.adapters import cognee_graph
     from vismaran_sdk import cognee_wrap
 
@@ -65,10 +64,9 @@ def test_sync_with_subject_binds_and_unbinds() -> None:
 
 
 def test_sync_with_subject_unbinds_on_exception() -> None:
-    with pytest.raises(RuntimeError, match="boom"):
-        with tag.sync_with_subject("alice@example.com"):
-            assert tag.current_subject() == "alice@example.com"
-            raise RuntimeError("boom")
+    with pytest.raises(RuntimeError, match="boom"), tag.sync_with_subject("alice@example.com"):
+        assert tag.current_subject() == "alice@example.com"
+        raise RuntimeError("boom")
     assert tag.current_subject() is None
 
 

@@ -12,8 +12,8 @@ on every feedback call too.
 Cascade gotcha. ``ModelInference`` holds raw provider request/response bodies
 (``raw_request``, ``raw_response``, ``system``, ``input_messages``, ``output``)
 — this is where the heaviest PII lives — but it has **no tags column**.
-Deletion MUST cascade by ``inference_id IN (...)`` joined off
-``ChatInference.id ∪ JsonInference.id``. Forget that join, leak the PII.
+Deletion MUST cascade by ``inference_id IN (...)`` joined off the union of
+``ChatInference.id`` and ``JsonInference.id``. Forget that join, leak the PII.
 
 Deletion mechanic. ``ALTER TABLE ... DELETE WHERE ...`` heavyweight mutations
 (precedent in TZ's own ``dicl_queries.rs:143``). Async, eventually consistent.
@@ -59,8 +59,8 @@ TZ_TABLES_TAG_SCOPED = (
 )
 
 # ClickHouse table that has NO tags column. Cascade by ``inference_id``
-# joined off ChatInference.id ∪ JsonInference.id. This holds raw provider
-# request/response bodies — forget this and we leak the data.
+# joined off the union of ChatInference.id and JsonInference.id. This holds raw
+# provider request/response bodies; forget this and we leak the data.
 TZ_TABLE_CASCADE_BY_INFERENCE_ID = "ModelInference"
 
 # Materialized views for fast tag-keyed reverse lookup.

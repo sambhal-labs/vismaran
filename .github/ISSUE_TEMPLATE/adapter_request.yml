@@ -1,0 +1,41 @@
+name: Adapter request
+description: Request a new graph / vector / log store adapter
+labels: ["adapter-request"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Vismaran is framework-agnostic at the protocol level; adapters are how
+        it reaches a specific store. See the roadmap in
+        [README.md](../blob/main/README.md).
+  - type: input
+    id: store
+    attributes:
+      label: Which store / framework?
+      placeholder: "e.g. Mem0, Zep, Graphiti, Qdrant, Weaviate, Langfuse"
+    validations:
+      required: true
+  - type: dropdown
+    id: layer
+    attributes:
+      label: Memory layer
+      options:
+        - Graph
+        - Vector
+        - Log
+        - Other / multiple
+    validations:
+      required: true
+  - type: textarea
+    id: deletion-api
+    attributes:
+      label: How does this store delete data?
+      description: >
+        Does it expose a subject/tenant-scoped delete API? If not, what's the
+        lowest-level deletion primitive (SQL, API, soft-delete flag)? How is
+        provenance / subject-tagging possible at ingest?
+  - type: textarea
+    id: context
+    attributes:
+      label: Why this one?
+      description: Are you using it in production? Roughly what scale?

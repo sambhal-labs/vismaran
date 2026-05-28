@@ -1,0 +1,95 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  UV_FROZEN: "1"
+
+jobs:
+  lint-and-types:
+    name: Lint & type-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - name: Sync (core + adapters + dev)
+        run: uv sync --extra all --extra dev
+      - name: Ruff lint
+        run: uv run ruff check --output-format=github .
+      - name: Ruff format check
+        run: uv run ruff format --check .
+      - name: Pyright
+        run: uv run pyright
+
+  unit-tests:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - name: Sync (core + adapters + dev)
+        run: uv sync --extra all --extra dev
+      - name: Run unit tests
+        run: uv run pytest -m "not integration" -v
+
+  integration-tests:
+    name: Integration tests (live services)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_USER: vismaran
+          POSTGRES_PASSWORD: vismarandev
+          POSTGRES_DB: vismaran
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U vismaran -d vismaran"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+      neo4j:
+        image: neo4j:5.24-community
+        env:
+          NEO4J_AUTH: neo4j/vismarandev
+        ports:
+          - 7474:7474
+          - 7687:7687
+        options: >-
+          --health-cmd "wget -q --spider http://localhost:7474 || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      VISMARAN_TEST_PG_DSN: postgres://vismaran:vismarandev@localhost:5432/vismaran
+      VISMARAN_TEST_NEO4J_URL: bolt://localhost:7687
+      VISMARAN_TEST_NEO4J_USER: neo4j
+      VISMARAN_TEST_NEO4J_PASSWORD: vismarandev
+      PGPASSWORD: vismarandev
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - name: Sync (core + adapters + dev)
+        run: uv sync --extra all --extra dev
+      - name: Apply Postgres schema
+        run: psql "$VISMARAN_TEST_PG_DSN" -v ON_ERROR_STOP=1 -f docker/postgres-init/01-pgvector-and-provenance.sql
+      - name: Run integration tests
+        run: uv run pytest -m integration -v

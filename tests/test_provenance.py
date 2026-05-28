@@ -8,6 +8,7 @@ tests don't interfere even if they're re-run individually.
 from __future__ import annotations
 
 import os
+from collections.abc import AsyncIterator
 from datetime import UTC, datetime
 
 import pytest
@@ -24,10 +25,10 @@ DEFAULT_DSN = os.environ.get(
 
 
 @pytest.fixture
-async def provenance() -> ProvenanceIndex:
+async def provenance() -> AsyncIterator[ProvenanceIndex]:
     """Fresh ProvenanceIndex against the local Postgres, wiped clean."""
     idx = await ProvenanceIndex.from_dsn(DEFAULT_DSN)
-    async with idx._pool.acquire() as conn:  # noqa: SLF001 — test setup
+    async with idx._pool.acquire() as conn:
         await conn.execute("TRUNCATE TABLE vismaran.provenance RESTART IDENTITY")
     yield idx
     await idx.close()

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/sambhal-labs/vismaran/security/advisories/new
+    about: Report receipt forgery, incomplete erasure, or subject-ID leakage privately.
+  - name: Question / use-case fit / DPDP-GDPR discussion
+    url: https://github.com/sambhal-labs/vismaran/discussions
+    about: Ask about adoption, compliance fit, or design — not a bug.

@@ -104,7 +104,7 @@ class CogneeGraphAdapter:
             async with driver.session(database=self._neo4j_database) as session:
                 rec = await (await session.run("RETURN 1 AS ok")).single()
             return rec is not None and rec.get("ok") == 1
-        except Exception:  # noqa: BLE001 — health check intentionally swallows
+        except Exception:
             return False
 
     async def preview(

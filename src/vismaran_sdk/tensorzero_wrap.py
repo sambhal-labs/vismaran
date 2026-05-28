@@ -13,7 +13,7 @@ scope (via ``with_subject``) at every call.
 Day-1 spike confirmed this on TensorZero latest (2026-05) — see
 ``project_adapter_spec.md`` in project memory.
 
-Implementation lands Day 1–4.
+Implementation lands with the TensorZero log adapter.
 """
 
 from __future__ import annotations
@@ -29,7 +29,7 @@ TAG_KEY_POLICY = "vismaran::policy_id"
 async def inference(
     *,
     function_name: str,
-    input: dict[str, Any],  # noqa: A002 — matches TZ's API
+    input: dict[str, Any],
     episode_id: str | None = None,
     variant_name: str | None = None,
     extra_tags: dict[str, str] | None = None,
