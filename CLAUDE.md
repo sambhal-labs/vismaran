@@ -18,14 +18,19 @@ the core depend on them.
 - **Conventional Commits.** `feat:`, `fix:`, `refactor:`, `test:`, `docs:`,
   `chore:`, `ci:`, `perf:`, with optional scope (`feat(graph): ...`). Imperative
   subject ≤ 72 chars; body explains the *why*. No sprint-day ("Day 2") subjects.
-- **No `Co-Authored-By: Claude` trailers.** This repo's history reads as a single
-  authored project.
+- **Include the `Co-Authored-By: Claude <noreply@anthropic.com>` trailer** at the
+  end of each commit body (blank line before it). The author stays `sambhal-labs`.
 - **Commit identity is `sambhal-labs`.** Git config is already set globally on
   this machine (`255515429+sambhal-labs@users.noreply.github.com`). Just
   `git commit` — no `-c` overrides. Verify with
   `gh api repos/sambhal-labs/vismaran/commits/HEAD --jq .author.login`.
 - **Never commit to `main`.** Feature branch (`feat/*`, `fix/*`, `refactor/*`,
   `test/*`, `chore/*`, `ci/*`) → PR → **squash merge**. `main` is protected.
+- **Every PR gets a fresh-eyes review.** Before merging, a reviewer that has *not*
+  seen the implementation work reviews the diff — in practice, spawn a separate
+  review sub-agent with only the diff + context (not the build reasoning). Address
+  its findings before merge. Reach for the `code-review` and (for any destructive
+  or LLM-exposed path) `security-review` skills as part of this.
 - **TDD.** Write the failing test first, watch it fail, then implement to green.
   PRs that add behavior without a test that would have failed before are
   incomplete.
@@ -34,6 +39,15 @@ the core depend on them.
   and fails against the real store is worse than no tool. The only sanctioned
   mock is `cognee.add` in unit tests (avoids needing an LLM for entity
   extraction); the full ingest path is covered by integration tests.
+- **Keep docs in lockstep with code.** Any PR that changes behavior or
+  capability updates the relevant docs in the same PR: the README status table
+  and quickstart, `SPEC.md`, the architecture docs, and this CLAUDE.md. Stale
+  docs are treated as a bug. A reviewer should flag a capability change that
+  didn't touch the docs.
+- **Use the available tooling.** Lean on enabled skills/plugins to keep quality
+  high — `code-review` and `security-review` on diffs, the pyright LSP for
+  types, `verify`/`run` when checking real behavior. Don't hand-roll what a
+  skill does better.
 
 ## Architecture — layered (DDD-influenced), hexagonal ports & adapters
 

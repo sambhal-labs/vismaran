@@ -29,8 +29,8 @@ Honoring an Article 17 request means erasing across **all three**, and proving y
 | CogneeGraphAdapter — tier-3 Cypher delete via NodeSet `subject::<id>` (the wedge) | ✅ | |
 | `vismaran_sdk.cognee_wrap.add` — subject tagging at ingest + provenance recording | ✅ | |
 | Cognee tier-1 (user-scope `cognee.forget(user=)`) + tier-2 (dataset-scope) | | v0.2 |
-| PgvectorVectorAdapter — lineage-driven embedding deletion | 🚧 | |
-| TensorZeroLogAdapter — 7 ClickHouse tables, ModelInference cascade by `inference_id` | 📋 | |
+| PgvectorVectorAdapter — lineage-driven embedding deletion | ✅ | |
+| TensorZeroLogAdapter — 7 ClickHouse tables, ModelInference cascade by `inference_id` | 🚧 | |
 | `vismaran_sdk.tensorzero_wrap` — `vismaran::subject_id` tag injection on inference + feedback | 📋 | |
 | Erasure Orchestrator — parallel fan-out, dry-run preview, fail-loud, idempotent | 📋 | |
 | Signed receipt (Ed25519, JSON, canonical manifest) + `vismaran verify` CLI | 📋 | |
