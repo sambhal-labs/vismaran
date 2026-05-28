@@ -18,7 +18,8 @@ from typing import TYPE_CHECKING, Any, Self
 
 import asyncpg
 
-from vismaran.types import ProvenanceRow, RecordId, SubjectId
+from vismaran.domain.identifiers import RecordId, SubjectId
+from vismaran.domain.provenance import ProvenanceRecord
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -108,7 +109,7 @@ class ProvenanceIndex:
                     tags_json,
                 )
 
-    async def record_many(self, rows: Iterable[ProvenanceRow]) -> None:
+    async def record_many(self, rows: Iterable[ProvenanceRecord]) -> None:
         """Bulk insert variant for seed scripts.
 
         Same idempotency contract as :meth:`record`.
@@ -132,7 +133,7 @@ class ProvenanceIndex:
 
     # --- read side (called by the orchestrator + adapters) -----------------
 
-    async def lookup(self, subject_id: SubjectId | str) -> list[ProvenanceRow]:
+    async def lookup(self, subject_id: SubjectId | str) -> list[ProvenanceRecord]:
         """All provenance rows for a subject, across all frameworks.
 
         Ordered by ``write_ts`` ascending so a caller can stream them in the
@@ -154,7 +155,7 @@ class ProvenanceIndex:
         self,
         subject_id: SubjectId | str,
         framework: str,
-    ) -> list[ProvenanceRow]:
+    ) -> list[ProvenanceRecord]:
         """Provenance rows for one subject scoped to one framework."""
         async with self._pool.acquire() as conn:
             rows = await conn.fetch(
@@ -198,10 +199,10 @@ class ProvenanceIndex:
 # --- helpers ---------------------------------------------------------------
 
 
-def _row_to_dataclass(record: asyncpg.Record) -> ProvenanceRow:
+def _row_to_dataclass(record: asyncpg.Record) -> ProvenanceRecord:
     raw_tags = record["tags"]
     tags = json.loads(raw_tags) if isinstance(raw_tags, str) else (raw_tags or {})
-    return ProvenanceRow(
+    return ProvenanceRecord(
         subject_id=SubjectId(record["subject_id"]),
         framework=record["framework"],
         record_id=RecordId(record["record_id"]),

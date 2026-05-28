@@ -9,17 +9,19 @@ from the provenance index for this subject.
 This is unglamorous but is THE primitive that makes Article 17 tractable for
 vector stores. If the operator didn't trace at ingest, we can't help.
 
-Implementation lands Day 3.
+Implementation lands with the vector-adapter milestone.
 """
 
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from vismaran.types import AdapterKind, Mode, Scope
+from vismaran.domain.erasure import AdapterKind, Mode, Scope
 
 if TYPE_CHECKING:
-    from vismaran.types import PerStoreResult, ProvenanceRow, SubjectId
+    from vismaran.domain.erasure import PerStoreResult
+    from vismaran.domain.identifiers import SubjectId
+    from vismaran.domain.provenance import ProvenanceRecord
 
 
 class PgvectorVectorAdapter:
@@ -44,10 +46,10 @@ class PgvectorVectorAdapter:
         subject: SubjectId,
         *,
         scope: Scope,
-        provenance: list[ProvenanceRow],
+        provenance: list[ProvenanceRecord],
     ) -> PerStoreResult:
         """Return ``{"embeddings_to_delete": len(provenance for pgvector)}``."""
-        raise NotImplementedError("Day 3 — see SPEC.md § Adapters")
+        raise NotImplementedError("Not implemented yet; see SPEC.md (Adapters).")
 
     async def erase(
         self,
@@ -55,9 +57,9 @@ class PgvectorVectorAdapter:
         *,
         scope: Scope,
         mode: Mode,
-        provenance: list[ProvenanceRow],
+        provenance: list[ProvenanceRecord],
     ) -> PerStoreResult:
-        raise NotImplementedError("Day 3 — see SPEC.md § Adapters")
+        raise NotImplementedError("Not implemented yet; see SPEC.md (Adapters).")
 
     async def health_check(self) -> bool:
-        raise NotImplementedError("Day 3")
+        raise NotImplementedError("Not implemented yet; see SPEC.md (Adapters).")

@@ -1,6 +1,6 @@
 """Subject tagging — the contextvar that carries subject_id through async writes.
 
-The constants here MUST match those in :mod:`vismaran.adapters.tensorzero_log`.
+The constants here MUST match those in :mod:`vismaran.infrastructure.adapters.tensorzero_log`.
 We keep two copies (one in the adapter module for the deletion path, one here
 for the ingest path) so callers never depend on the adapter module just to
 ingest. The cross-check is in ``tests/test_tag.py`` to catch drift.
