@@ -1,9 +1,12 @@
 """Exception hierarchy for Vismaran.
 
-Only four exceptions. The orchestrator and adapters MUST raise one of these;
-exceptions from underlying frameworks (cognee, neo4j, asyncpg) are caught at the
-infrastructure boundary and re-raised as ``PartialErasureError`` with the
-underlying exception attached as ``__cause__``.
+Only four exceptions. Exceptions from underlying frameworks (cognee, neo4j,
+asyncpg, httpx) are caught by the orchestrator at the adapter boundary and
+recorded as the failing adapter's exception *type* — never its message, which
+can echo the subject — in that adapter's ``PerStoreResult``. The orchestrator
+then raises a single ``PartialErasureError`` describing the collective outcome
+(it does not chain the underlying exceptions via ``__cause__``, to keep the
+subject out of the traceback).
 """
 
 from __future__ import annotations
@@ -37,10 +40,13 @@ class UntracedSubjectError(VismaranError):
 class PartialErasureError(VismaranError):
     """One or more adapters failed to complete the erasure.
 
-    No receipt is signed. The orchestrator marks the operation ``in_progress``
-    in the local audit log so a retry is deterministic. ``per_adapter`` is the
-    per-store status so the caller can show a precise picture of what's done
-    and what isn't.
+    No receipt is signed and the provenance index is left intact, so a retry can
+    resolve the subject again. A wholesale retry is safe — every adapter is
+    idempotent, so the adapters that already succeeded report zero on the second
+    pass while the previously-failing one completes. ``per_adapter`` is the
+    per-store status (each failure carries the exception *type* only); a
+    persistent audit log that skips already-succeeded adapters is a post-v0
+    optimization. ``operation_id`` correlates the attempt in logs.
     """
 
     def __init__(

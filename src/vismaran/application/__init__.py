@@ -5,6 +5,7 @@ from vismaran.application.ports import (
     GraphAdapter,
     LogAdapter,
     ProvenanceStore,
+    ReceiptSigner,
     StoreAdapter,
     VectorAdapter,
 )
@@ -14,6 +15,7 @@ __all__ = [
     "LogAdapter",
     "Orchestrator",
     "ProvenanceStore",
+    "ReceiptSigner",
     "StoreAdapter",
     "VectorAdapter",
 ]

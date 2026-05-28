@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from vismaran.domain.erasure import AdapterKind, Mode, PerStoreResult, Scope
     from vismaran.domain.identifiers import RecordId, SubjectId
     from vismaran.domain.provenance import ProvenanceRecord
+    from vismaran.domain.receipt import Receipt
 
 
 @runtime_checkable
@@ -69,6 +70,21 @@ class VectorAdapter(StoreAdapter, Protocol):
 @runtime_checkable
 class LogAdapter(StoreAdapter, Protocol):
     """Marker port for log-layer adapters (TensorZero, Langfuse, OpenTelemetry, ...)."""
+
+
+@runtime_checkable
+class ReceiptSigner(Protocol):
+    """Port for signing a receipt on a successful erasure.
+
+    The orchestrator builds an unsigned :class:`~vismaran.domain.receipt.Receipt`
+    and hands it here; the concrete ``Ed25519ReceiptSigner`` lives in
+    ``vismaran.infrastructure.crypto``. The application layer never imports the
+    crypto library — it depends only on this port.
+    """
+
+    def sign(self, receipt: Receipt) -> Receipt:
+        """Return a copy of ``receipt`` with ``manifest_hash`` + ``signature`` set."""
+        ...
 
 
 @runtime_checkable
