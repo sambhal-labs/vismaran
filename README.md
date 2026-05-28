@@ -20,7 +20,7 @@ Honoring an Article 17 request means erasing across **all three**, and proving y
 
 ## Status
 
-**v0.1 alpha — active development.** All three v0 store adapters are in — Cognee (graph), pgvector (vector), and TensorZero (log) — covering deletion across every layer an agent remembers a subject in, plus the signed Ed25519 deletion receipt (canonical-JSON, tamper-evident, verifiable offline). 92 tests pass on every PR — 50 unit + 42 integration against live Postgres + Neo4j + ClickHouse. The orchestrator that fans out across the three adapters and emits the receipt is next. Legend: ✅ shipped · 🚧 next · 📋 planned.
+**v0.1 alpha — active development.** The full erase path is in: all three v0 store adapters — Cognee (graph), pgvector (vector), TensorZero (log) — behind an orchestrator that fans out across them in parallel, purges the provenance ledger, and on full success emits a signed Ed25519 deletion receipt (canonical-JSON, tamper-evident, verifiable offline) — fail-loud (no partial-commit receipt) and idempotent. 106 tests pass on every PR — 63 unit + 43 integration against live Postgres + Neo4j + ClickHouse. The `vismaran` CLI (keygen / erase / verify) that wraps this for operators is next. Legend: ✅ shipped · 🚧 next · 📋 planned.
 
 | Capability | v0.1 | Roadmap |
 |---|:-:|:-:|
@@ -32,9 +32,9 @@ Honoring an Article 17 request means erasing across **all three**, and proving y
 | PgvectorVectorAdapter — lineage-driven embedding deletion | ✅ | |
 | TensorZeroLogAdapter — 7 ClickHouse tables, ModelInference cascade by `inference_id` | ✅ | |
 | `vismaran_sdk.tensorzero_wrap` — `vismaran::subject_id` tag injection on inference + feedback | 📋 | |
-| Erasure Orchestrator — parallel fan-out, dry-run preview, fail-loud, idempotent | 🚧 | |
+| Erasure Orchestrator — parallel fan-out, dry-run preview, fail-loud, idempotent | ✅ | |
 | Signed receipt — Ed25519 over a canonical-JSON manifest, tamper-evident, offline-verifiable | ✅ | |
-| `vismaran` CLI — `keygen` / `erase` / `verify` subcommands | 📋 | |
+| `vismaran` CLI — `keygen` / `erase` / `verify` subcommands | 🚧 | |
 | FastAPI + HTMX demo (Cognee + pgvector + TensorZero) | 📋 | |
 | Crypto-shred mode | | v0.2 |
 | Anonymize-partial-subject (graph) — re-embed redacted chunks | | v0.2 |

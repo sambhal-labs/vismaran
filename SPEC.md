@@ -16,8 +16,8 @@ A subject's data lives in three layers — graph (Cognee on Neo4j), vector (pgve
 
 ### Modes
 
-- **`dry_run=True`** — query only. Adapters return projected counts; nothing is mutated; no receipt is emitted.
-- **`dry_run=False`** (commit) — execute the erasure, write the receipt to disk, and return it. Idempotent: a second run for the same subject is a no-op that returns a receipt asserting zero rows affected this time.
+- **`Orchestrator.preview(subject)`** (dry-run; CLI `--dry-run`) — query only. Adapters return projected counts; nothing is mutated; no provenance is purged; no receipt is emitted.
+- **`Orchestrator.erase(subject)`** (commit) — execute the erasure, purge the provenance index, and return a signed receipt. Idempotent: a second run for the same subject is a no-op that returns a receipt asserting zero rows affected this time.
 
 ### Scopes
 
@@ -29,9 +29,9 @@ A subject's data lives in three layers — graph (Cognee on Neo4j), vector (pgve
 
 Adapter failures are fail-loud. If any of the three adapters cannot complete the erasure to its store (e.g., ClickHouse mutation rejected, pgvector unreachable, Neo4j returns a constraint violation), the orchestrator:
 
-1. Does **not** sign a receipt.
-2. Raises `PartialErasureError` with per-adapter status (which succeeded, which failed, what was already erased).
-3. Marks the operation `in_progress=true` in the local audit log so an operator can retry deterministically without re-processing the succeeded adapters.
+1. Does **not** sign a receipt, and does **not** purge the provenance index (so a retry can resolve the subject again).
+2. Raises `PartialErasureError` with per-adapter status (which succeeded, which failed — the failure carries the exception *type* only, never its message, which could echo the subject) and an `operation_id` for log correlation.
+3. Leaves retry to the operator. A retry is safe to run wholesale: every adapter is idempotent, so the adapters that already succeeded simply report zero on the second pass while the previously-failing one completes. (A persistent audit log that skips already-succeeded adapters is a post-v0 optimization; v0 leans on idempotency for correctness.)
 
 We considered partial-commit receipts (sign what was done, leave the rest for next try) and rejected them — a partial receipt is worse than no receipt, because it lets an operator hand a regulator a document that *looks* complete but isn't.
 
@@ -74,15 +74,18 @@ Canonical JSON, signed with Ed25519. The signed payload includes a SHA-256 hash 
   "operator_id": "your-company-vismaran-deploy-01",
   "clauses": ["DPDP-2023:S12", "GDPR-Art17"],
   "stores": {
-    "cognee": {"nodes_deleted": 14, "edges_deleted": 9, "chunks_redacted": 3, "embeddings_updated": 12, "method": "cognee.forget(dataset) + cypher tier-3"},
-    "pgvector": {"embeddings_deleted": 230, "method": "provenance-driven delete"},
-    "tensorzero": {"chat_inference_rows": 412, "json_inference_rows": 0, "model_inference_rows": 412, "boolean_feedback_rows": 8, "float_feedback_rows": 0, "comment_feedback_rows": 3, "demonstration_feedback_rows": 0, "method": "ALTER TABLE DELETE WHERE tags + inference_id cascade"}
+    "graph": {"nodes_deleted": 14, "edges_deleted": 9, "chunks_redacted": 3, "embeddings_updated": 12, "method": "cognee.forget(dataset) + cypher tier-3"},
+    "vector": {"embeddings_deleted": 230, "method": "provenance-driven delete"},
+    "log": {"chat_inference_rows": 412, "json_inference_rows": 0, "model_inference_rows": 412, "boolean_feedback_rows": 8, "float_feedback_rows": 0, "comment_feedback_rows": 3, "demonstration_feedback_rows": 0, "method": "ALTER TABLE DELETE WHERE tags + inference_id cascade"},
+    "provenance": {"rows_purged": 642, "method": "provenance index purge"}
   },
   "manifest_hash": "sha256:c1d2…",
   "signature": "ed25519:…",
   "verification_hint": "vismaran verify receipt.json --pubkey op.pub"
 }
 ```
+
+**Stores keys:** `stores` is keyed by memory layer — `graph`, `vector`, `log` — plus `provenance` for the ledger purge. Each entry carries that adapter's counts and a human-readable `method`; the concrete framework (cognee / pgvector / tensorzero) is named inside `method`. v0 runs one adapter per layer.
 
 **Why hash the subject_id:** the receipt is metadata the operator must keep, sometimes indefinitely. Storing the raw subject ID after we just erased it would be self-defeating. The hash + salt lets a regulator confirm "this receipt is for subject X" by re-hashing X with the salt, without leaking X to anyone else who reads the receipt.
 
