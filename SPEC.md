@@ -86,6 +86,18 @@ Canonical JSON, signed with Ed25519. The signed payload includes a SHA-256 hash 
 
 **Why hash the subject_id:** the receipt is metadata the operator must keep, sometimes indefinitely. Storing the raw subject ID after we just erased it would be self-defeating. The hash + salt lets a regulator confirm "this receipt is for subject X" by re-hashing X with the salt, without leaking X to anyone else who reads the receipt.
 
+**Canonicalization (normative for v0.1).** The signature covers `sha256(manifest)`, where `manifest` is exactly these seven fields — `version`, `subject_id_hash`, `salt_hash`, `issued_at`, `operator_id`, `clauses`, `stores` — and **excludes** `manifest_hash`, `signature`, and `verification_hint` (those are the signature and human hints, not signed content). The manifest is serialized as:
+
+- UTF-8, with non-ASCII emitted literally (not `\u`-escaped);
+- object keys sorted lexicographically, recursively;
+- no insignificant whitespace (`,` and `:` separators only);
+- `issued_at` as RFC 3339 UTC with a `Z` suffix (e.g. `2026-05-27T15:42:01Z`);
+- `stores` counts as exact integers (floats and booleans are rejected at build time).
+
+This profile is **pinned** so an independent verifier — in any language — reproduces the same bytes and can check the receipt offline with nothing but the receipt, the public key, and the rules above. `operator_id` should be NFC-normalized. The profile will be tightened to [RFC 8785 (JSON Canonicalization Scheme)](https://www.rfc-editor.org/rfc/rfc8785) before 1.0; until then, treat this list as the contract.
+
+**Salt confidentiality.** `subject_id_hash = sha256(salt ‖ subject_id)`; only `salt_hash` (a hash *of the salt*) ever appears in a receipt. To re-hash a subject and match, a regulator needs the raw salt shared out-of-band — so the salt must stay confidential. A leaked salt makes low-entropy subjects (emails, phone numbers) brute-forceable; moving the subject hash to a slow KDF is a pre-1.0 hardening.
+
 ## DPDP / GDPR clause mapping
 
 Concise table of which clause(s) each capability satisfies (expanded as the receipt milestone lands).

@@ -20,7 +20,7 @@ Honoring an Article 17 request means erasing across **all three**, and proving y
 
 ## Status
 
-**v0.1 alpha — active development.** All three v0 store adapters are in — Cognee (graph), pgvector (vector), and TensorZero (log) — covering deletion across every layer an agent remembers a subject in. 62 tests pass against live Postgres + Neo4j + ClickHouse on every PR. The orchestrator that fans out across the three and the signed receipt are next. Legend: ✅ shipped · 🚧 next · 📋 planned.
+**v0.1 alpha — active development.** All three v0 store adapters are in — Cognee (graph), pgvector (vector), and TensorZero (log) — covering deletion across every layer an agent remembers a subject in, plus the signed Ed25519 deletion receipt (canonical-JSON, tamper-evident, verifiable offline). 92 tests pass on every PR — 50 unit + 42 integration against live Postgres + Neo4j + ClickHouse. The orchestrator that fans out across the three adapters and emits the receipt is next. Legend: ✅ shipped · 🚧 next · 📋 planned.
 
 | Capability | v0.1 | Roadmap |
 |---|:-:|:-:|
@@ -33,7 +33,8 @@ Honoring an Article 17 request means erasing across **all three**, and proving y
 | TensorZeroLogAdapter — 7 ClickHouse tables, ModelInference cascade by `inference_id` | ✅ | |
 | `vismaran_sdk.tensorzero_wrap` — `vismaran::subject_id` tag injection on inference + feedback | 📋 | |
 | Erasure Orchestrator — parallel fan-out, dry-run preview, fail-loud, idempotent | 🚧 | |
-| Signed receipt (Ed25519, JSON, canonical manifest) + `vismaran verify` CLI | 📋 | |
+| Signed receipt — Ed25519 over a canonical-JSON manifest, tamper-evident, offline-verifiable | ✅ | |
+| `vismaran` CLI — `keygen` / `erase` / `verify` subcommands | 📋 | |
 | FastAPI + HTMX demo (Cognee + pgvector + TensorZero) | 📋 | |
 | Crypto-shred mode | | v0.2 |
 | Anonymize-partial-subject (graph) — re-embed redacted chunks | | v0.2 |
