@@ -20,7 +20,7 @@ Honoring an Article 17 request means erasing across **all three**, and proving y
 
 ## Status
 
-**v0.1 alpha — active development.** The Cognee graph adapter (tier-3 NodeSet-scoped Cypher delete) and the ingest-side SDK are in, with 39 tests passing against live Postgres + Neo4j on every PR. Pgvector and TensorZero adapters, the orchestrator, and signed receipts are next. Legend: ✅ shipped · 🚧 next · 📋 planned.
+**v0.1 alpha — active development.** All three v0 store adapters are in — Cognee (graph), pgvector (vector), and TensorZero (log) — covering deletion across every layer an agent remembers a subject in. 62 tests pass against live Postgres + Neo4j + ClickHouse on every PR. The orchestrator that fans out across the three and the signed receipt are next. Legend: ✅ shipped · 🚧 next · 📋 planned.
 
 | Capability | v0.1 | Roadmap |
 |---|:-:|:-:|
@@ -30,9 +30,9 @@ Honoring an Article 17 request means erasing across **all three**, and proving y
 | `vismaran_sdk.cognee_wrap.add` — subject tagging at ingest + provenance recording | ✅ | |
 | Cognee tier-1 (user-scope `cognee.forget(user=)`) + tier-2 (dataset-scope) | | v0.2 |
 | PgvectorVectorAdapter — lineage-driven embedding deletion | ✅ | |
-| TensorZeroLogAdapter — 7 ClickHouse tables, ModelInference cascade by `inference_id` | 🚧 | |
+| TensorZeroLogAdapter — 7 ClickHouse tables, ModelInference cascade by `inference_id` | ✅ | |
 | `vismaran_sdk.tensorzero_wrap` — `vismaran::subject_id` tag injection on inference + feedback | 📋 | |
-| Erasure Orchestrator — parallel fan-out, dry-run preview, fail-loud, idempotent | 📋 | |
+| Erasure Orchestrator — parallel fan-out, dry-run preview, fail-loud, idempotent | 🚧 | |
 | Signed receipt (Ed25519, JSON, canonical manifest) + `vismaran verify` CLI | 📋 | |
 | FastAPI + HTMX demo (Cognee + pgvector + TensorZero) | 📋 | |
 | Crypto-shred mode | | v0.2 |

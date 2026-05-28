@@ -75,11 +75,30 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 20
+      clickhouse:
+        image: clickhouse/clickhouse-server:25.4
+        env:
+          CLICKHOUSE_DB: tensorzero
+          CLICKHOUSE_USER: tensorzero
+          CLICKHOUSE_PASSWORD: vismarandev
+        ports:
+          - 8123:8123
+          - 9000:9000
+        options: >-
+          --health-cmd "wget -q --spider http://localhost:8123/ping || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 20
+          --ulimit nofile=262144:262144
     env:
       VISMARAN_TEST_PG_DSN: postgres://vismaran:vismarandev@localhost:5432/vismaran
       VISMARAN_TEST_NEO4J_URL: bolt://localhost:7687
       VISMARAN_TEST_NEO4J_USER: neo4j
       VISMARAN_TEST_NEO4J_PASSWORD: vismarandev
+      VISMARAN_TEST_CLICKHOUSE_URL: http://localhost:8123
+      VISMARAN_TEST_CLICKHOUSE_USER: tensorzero
+      VISMARAN_TEST_CLICKHOUSE_PASSWORD: vismarandev
+      VISMARAN_TEST_CLICKHOUSE_DB: tensorzero
       PGPASSWORD: vismarandev
     steps:
       - uses: actions/checkout@v4
@@ -91,5 +110,26 @@ jobs:
         run: uv sync --extra all --extra dev
       - name: Apply Postgres schema
         run: psql "$VISMARAN_TEST_PG_DSN" -v ON_ERROR_STOP=1 -f docker/postgres-init/01-pgvector-and-provenance.sql
+      - name: Bootstrap TensorZero schema in ClickHouse
+        # The TensorZero gateway applies its ClickHouse migrations on startup —
+        # that's how we get the real schema (no hand-rolled DDL). Run it against
+        # the clickhouse service and poll until the tables exist.
+        run: |
+          docker run -d --name tz-migrate --network host \
+            -v "$PWD/docker/tensorzero.toml:/app/tensorzero.toml:ro" \
+            -e TENSORZERO_CLICKHOUSE_URL="http://tensorzero:vismarandev@localhost:8123/tensorzero" \
+            -e ANTHROPIC_API_KEY=dummy -e OPENAI_API_KEY=dummy \
+            tensorzero/gateway:latest --config-file /app/tensorzero.toml
+          echo "Waiting for TensorZero migrations to create all 7 target tables..."
+          tables="'ChatInference','JsonInference','ModelInference','BooleanMetricFeedback','FloatMetricFeedback','CommentFeedback','DemonstrationFeedback'"
+          q="SELECT count() FROM system.tables WHERE database='tensorzero' AND name IN ($tables)"
+          for i in $(seq 1 60); do
+            ready=$(curl -s 'http://localhost:8123/?user=tensorzero&password=vismarandev' --data-binary "$q" || echo 0)
+            if [ "$ready" = "7" ]; then echo "TensorZero schema ready (7/7 tables)"; exit 0; fi
+            sleep 2
+          done
+          echo "TensorZero schema did not materialize in time (got $ready/7)" >&2
+          docker logs tz-migrate >&2 || true
+          exit 1
       - name: Run integration tests
         run: uv run pytest -m integration -v
