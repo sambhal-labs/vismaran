@@ -200,10 +200,7 @@ class ProvenanceIndex:
 
 def _row_to_dataclass(record: asyncpg.Record) -> ProvenanceRow:
     raw_tags = record["tags"]
-    if isinstance(raw_tags, str):
-        tags = json.loads(raw_tags)
-    else:
-        tags = raw_tags or {}
+    tags = json.loads(raw_tags) if isinstance(raw_tags, str) else (raw_tags or {})
     return ProvenanceRow(
         subject_id=SubjectId(record["subject_id"]),
         framework=record["framework"],

@@ -79,4 +79,6 @@ select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]
 [tool.pyright]
 pythonVersion = "3.12"
 typeCheckingMode = "standard"
-include = ["src", "tests", "examples"]
+include = ["src", "tests"]
+# examples/ is illustrative (lands Day 6) and pulls heavy optional deps; not type-gated.
+exclude = ["examples", "**/__pycache__", ".venv"]

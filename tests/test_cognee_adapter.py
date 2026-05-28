@@ -104,7 +104,7 @@ async def _seed_subject_nodes(subject: str, *, n_entities: int = 3, n_chunks: in
         )
         # Connect entities to chunks so DETACH DELETE has edges to remove
         await session.run(
-            f"""
+            """
             MATCH (e:Entity) WHERE $tag IN e.belongs_to_set
             MATCH (c:DocumentChunk) WHERE $tag IN c.belongs_to_set
             CREATE (e)-[:MENTIONED_IN]->(c)
@@ -211,9 +211,7 @@ async def test_commit_erase_isolates_other_subjects(
     try:
         await _seed_subject_nodes(alice, n_entities=2, n_chunks=1)
         await _seed_subject_nodes(bob, n_entities=2, n_chunks=1)
-        await adapter.erase(
-            SubjectId(alice), scope=Scope.SUBJECT, mode=Mode.COMMIT, provenance=[]
-        )
+        await adapter.erase(SubjectId(alice), scope=Scope.SUBJECT, mode=Mode.COMMIT, provenance=[])
         assert await _count_subject_nodes(alice) == 0
         assert await _count_subject_nodes(bob) == 3
     finally:

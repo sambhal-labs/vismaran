@@ -1,0 +1,54 @@
+name: Bug report
+description: Something in Vismaran behaves incorrectly
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. For **security** issues (receipt forgery,
+        incomplete erasure, subject-ID leakage) do **not** file here — see
+        [SECURITY.md](../blob/main/SECURITY.md).
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What did you observe, and what did you expect instead?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. `make up`
+        2. seed subject "alice@example.com" via ...
+        3. `vismaran erase --subject alice@example.com`
+        4. observe ...
+    validations:
+      required: true
+  - type: dropdown
+    id: layer
+    attributes:
+      label: Which memory layer / component?
+      multiple: true
+      options:
+        - Graph (Cognee adapter)
+        - Vector (pgvector adapter)
+        - Log (TensorZero adapter)
+        - Orchestrator
+        - Receipt / verify
+        - Provenance index / SDK
+        - Other / not sure
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Vismaran version / commit
+    validations:
+      required: true
+  - type: textarea
+    id: env
+    attributes:
+      label: Environment
+      description: Python version, OS, store versions (Cognee, pgvector, TensorZero, ClickHouse).

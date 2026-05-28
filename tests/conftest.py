@@ -5,7 +5,7 @@ Integration fixtures (``pg_pool``, ``ch_client``, ``neo4j_driver``,
 ``@pytest.mark.integration`` so ``pytest -m "not integration"`` works on a
 laptop without docker.
 
-Lands Day 2–4 as each adapter materializes.
+Materialize as each adapter lands.
 """
 
 from __future__ import annotations

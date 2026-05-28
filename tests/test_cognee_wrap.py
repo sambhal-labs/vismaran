@@ -8,7 +8,7 @@ ingest-via-LLM-then-delete flow is exercised in the Day-6 demo end-to-end test.
 from __future__ import annotations
 
 import uuid
-from typing import Any
+from collections.abc import AsyncIterator
 from unittest.mock import AsyncMock
 
 import pytest
@@ -49,17 +49,19 @@ def test_extract_record_ids_handles_empty() -> None:
 
 
 def test_extract_record_ids_handles_single_object_with_id() -> None:
-    class O:
+    class Lone:
         def __init__(self) -> None:
             self.id = "lone-1"
 
-    assert cw._extract_record_ids(O()) == ["lone-1"]
+    assert cw._extract_record_ids(Lone()) == ["lone-1"]
 
 
 # --- wrapper behavior (mocked cognee.add) ----------------------------------
 
 
-async def test_add_raises_untraced_when_no_subject_in_scope(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_add_raises_untraced_when_no_subject_in_scope(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     mock_add = AsyncMock(return_value=[])
     monkeypatch.setattr(cw.cognee, "add", mock_add)
 
@@ -125,9 +127,9 @@ pytestmark_integration = pytest.mark.integration
 
 
 @pytest.fixture
-async def provenance() -> ProvenanceIndex:
+async def provenance() -> AsyncIterator[ProvenanceIndex]:
     idx = await ProvenanceIndex.from_dsn(DEFAULT_DSN)
-    async with idx._pool.acquire() as conn:  # noqa: SLF001 — test setup
+    async with idx._pool.acquire() as conn:
         await conn.execute("TRUNCATE TABLE vismaran.provenance RESTART IDENTITY")
     yield idx
     await idx.close()
@@ -181,4 +183,4 @@ def test_default_dataset_matches_cognee_default() -> None:
 
     sig = inspect.signature(cognee.add)
     cognee_default = sig.parameters["dataset_name"].default
-    assert cw.DEFAULT_DATASET == cognee_default
+    assert cognee_default == cw.DEFAULT_DATASET
